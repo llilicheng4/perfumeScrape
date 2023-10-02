@@ -4,7 +4,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 interface IPerfume extends Document {
     NAME: string;
     BRAND: string;
-    LAUNCHDATE: number;
+    // LAUNCHDATE: number;
     // LONGEVITY: Record<string, number>;
     // SILLAGE: Record<string, number>;
     // "Price/Value": Record<string, number>;
@@ -19,7 +19,7 @@ interface IPerfume extends Document {
 const PerfumeSchema = new Schema<IPerfume>({
     NAME: String,
     BRAND: String,
-    LAUNCHDATE: Number,
+    // LAUNCHDATE: Number,
     // LONGEVITY: Object,
     // SILLAGE: Object,
     // "Price/Value": Object,

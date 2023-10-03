@@ -13,6 +13,8 @@ interface IPerfume extends Document {
     TOP_NOTES: string[];
     MIDDLE_NOTES: string[];
     BASE_NOTES: string[];
+    PROS: string[];
+    CONS: string[];
 }
 
 // Create a schema for the perfume data
@@ -28,7 +30,10 @@ const PerfumeSchema = new Schema<IPerfume>({
     TOP_NOTES: [String],
     MIDDLE_NOTES: [String],
     BASE_NOTES: [String],
+    PROS: [String],
+    CONS: [String],
 });
 
+PerfumeSchema.index({ NAME: 1, BRAND: 1 }, { unique: true });
 // Create and export the model
 export const Perfume = mongoose.model<IPerfume>('Perfume', PerfumeSchema);

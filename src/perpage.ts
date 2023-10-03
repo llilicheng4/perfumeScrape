@@ -5,34 +5,41 @@ import fs from 'fs';
 import csvParser from 'csv-parser';
 import { TimeoutError } from "puppeteer-core";
 import mongoose from 'mongoose';
-
-// Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017')
-
-const db = mongoose.connection;
-
-db.on('error', console.error.bind(console, 'MongoDB connection error:'));
-db.once('open', () => {
-    console.log('Connected to MongoDB');
-});
-
+import 'dotenv/config';
 import { Perfume } from './dbSchema';
 
 
+
+async function connectDB() {
+    // Connect to MongoDB
+    mongoose.connect(process.env["DB_STRING"]);
+
+    const db = mongoose.connection;
+
+    db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+    db.once('open', () => {
+        console.log('Connected to MongoDB');
+    });
+
+    return db;
+}
+
+
 puppeteer.use(StealthPlugin()).use(Adblocker({ blockTrackers: true })).launch({ executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe", headless: false }).then(async browser => {
+    await connectDB();
     for (let i = 1; i < 11; i++) {
         for (let j = 1; j < 4; j++) {
             const rows = await readfromcsv(`dataP${i}-G${j}.csv`);
+            const page = await browser.newPage();
 
             for (const row of rows) {
                 console.log(row);
-                const page = await browser.newPage();
 
                 await page.goto(row.Link, { timeout: 0 });
 
                 await new Promise(r => setTimeout(r, 5000));
 
-                readFromPage(page);
+                await readFromPage(page, row);
             }
 
 
@@ -42,17 +49,17 @@ puppeteer.use(StealthPlugin()).use(Adblocker({ blockTrackers: true })).launch({ 
 
 });
 
-async function readFromPage(page) {
+async function readFromPage(page, details) {
     await page.waitForXPath('//*[@id="toptop"]/h1');
 
     var gender = await page.$eval('#toptop > h1 > small', node => node.innerText);
 
     var genderNum;
 
-    if (gender.includes("for women") && gender.includes("for men")) {
+    if (gender === "for women and men") {
         genderNum = 2;
     }
-    else if (gender.includes("for men")) {
+    else if (gender === "for men") {
         genderNum = 1;
     }
     else {
@@ -65,7 +72,7 @@ async function readFromPage(page) {
             const width = parseFloat(style.getPropertyValue('width'));
             return {
                 Type: element.textContent,
-                Strength: parseFloat((width / 294 * 100).toFixed(2)),
+                Strength: parseFloat((width / 296.797 * 100).toFixed(2)),
             };
         });
     });
@@ -75,11 +82,15 @@ async function readFromPage(page) {
 
     const TopNotesExtract = await readToArray('top', page, '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(4) > div > div:nth-child(1)', '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(4) > div > div');
     const MiddleNoteExtract = await readToArray('middle', page, '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(6) > div > div:nth-child(1) > div:nth-child(2)', '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(6) > div > div');
-    const BaseNotesExtract = await readToArray('base', page, '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(8) > div > div:nth-child(1)', '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(4) > div > div');
+    const BaseNotesExtract = await readToArray('base', page, '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(8) > div > div:nth-child(1)', '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(8) > div > div');
 
     const pros = await readToArray("pros", page, '#main-content > div.grid-x.grid-margin-x > div.small-12.medium-12.large-9.cell > div > div:nth-child(5) > div > div:nth-child(1) > div:nth-child(2)', '#main-content > div.grid-x.grid-margin-x > div.small-12.medium-12.large-9.cell > div > div:nth-child(5) > div > div:nth-child(1) > div > span');
     const cons = await readToArray("cons", page, '#main-content > div.grid-x.grid-margin-x > div.small-12.medium-12.large-9.cell > div > div:nth-child(5) > div > div:nth-child(2) > div:nth-child(2)', '#main-content > div.grid-x.grid-margin-x > div.small-12.medium-12.large-9.cell > div > div:nth-child(5) > div > div:nth-child(2) > div > span');
+
+    await addToDB(details.Name, details.Brand, genderNum, accordBars, TopNotesExtract, MiddleNoteExtract, BaseNotesExtract)
 }
+
+
 
 // TO-DO create function to find highest value for longevity, sillage etc... remember might have 0 votes
 async function highestNum(indent: string, page, selectorwait: string, selector: string) {
@@ -132,14 +143,14 @@ async function addToDB(name: string, brand: string, gender: number, accords, top
         BASE_NOTES: base
     });
 
-    // Save the new perfume document
-    // newPerfume.save((err: any) => {
-    //     if (err) {
-    //         console.error(err);
-    //     } else {
-    //         console.log('Perfume document saved successfully.');
-    //     }
-    // });
+    await newPerfume.save().then(savedDoc => {
+
+        if (savedDoc === newPerfume) {
+            console.log("saved");
+        } else {
+            console.log("not saved");
+        }
+    });
 }
 
 async function readToArray(ident: string, page, selectorwait: string, selector: string) {

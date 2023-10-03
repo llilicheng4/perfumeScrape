@@ -11,12 +11,13 @@
   "dependencies": {
     "csv-parser": "^3.0.0",
     "csv-writer": "^1.6.0",
+    "dotenv": "^16.3.1",
     "mongoose": "^7.5.3",
     "puppeteer-core": "^21.2.1",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-adblocker": "^2.13.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
-    "user-agents": "^1.0.1444"
+    "user-agents": "^0.0.2"
   },
   "devDependencies": {
     "typescript": "^5.2.2"

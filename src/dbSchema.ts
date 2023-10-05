@@ -15,6 +15,8 @@ interface IPerfume extends Document {
     BASE_NOTES: string[];
     PROS: string[];
     CONS: string[];
+    SUMMARY: string;
+    DESC: string;
 }
 
 // Create a schema for the perfume data
@@ -32,6 +34,8 @@ const PerfumeSchema = new Schema<IPerfume>({
     BASE_NOTES: [String],
     PROS: [String],
     CONS: [String],
+    SUMMARY: String,
+    DESC: String,
 });
 
 PerfumeSchema.index({ NAME: 1, BRAND: 1 }, { unique: true });

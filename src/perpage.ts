@@ -89,18 +89,45 @@ async function readFromPage(page, details) {
 
     // const summaryHTML = "#main-content > div.grid-x.grid-margin-x > div.small-12.medium-12.large-9.cell > div > div:nth-child(2) > div:nth-child(5) > div > p:nth-child(1)";
     // const summary = await readParagraph("summary", page, summaryHTML, summaryHTML);
-    const detailHTML = "#main-content > div.grid-x.grid-margin-x > div.small-12.medium-12.large-9.cell > div > div:nth-child(2) > div:nth-child(5) > div > div";
-    const dets = await readParagraph("details", page, detailHTML, detailHTML);
-    console.log(dets);
-    // await addToDB(details.Name, details.Brand, genderNum, accordBars, TopNotesExtract, MiddleNoteExtract, BaseNotesExtract);
+    // const detailHTML = "#main-content > div.grid-x.grid-margin-x > div.small-12.medium-12.large-9.cell > div > div:nth-child(2) > div:nth-child(5) > div > div";
+    // const dets = await readParagraph("details", page, detailHTML, detailHTML);
+    // console.log(dets);
+    await page.click('#popular-positive-reviews-label');
+
+    const positiveReviews = await ReadReviews("positive", page, '#popular-positive-reviews > div > div.grid-x.grid-padding-x.grid-margin-y', '#popular-positive-reviews > div > div.grid-x.grid-padding-x.grid-margin-y > div', 'div > div.flex-child-auto > div > p');
+    await page.click('#popular-negative-reviews-label');
+    const negativeReviews = await ReadReviews("negative", page, '#popular-negative-reviews > div > div.grid-x.grid-padding-x.grid-margin-y', '#popular-negative-reviews > div > div.grid-x.grid-padding-x.grid-margin-y > div', 'div > div.flex-child-auto > div > p');
+
+    // await addToDB(details.Name, details.Brand, genderNum, accordBars, TopNotesExtract, MiddleNoteExtract, BaseNotesExtract, pros, cons, summary, dets, negativeReviews, positiveReviews);
+
+
+}
+
+async function ReadReviews(indent: string, page, selectorWait: string, selector: string, innerSelector) {
+    await page.waitForSelector(selectorWait)
+        .then(() => console.log("found: ", indent))
+
+
+    const boxes = await page.$$(selector);
+    var count = 0;
+    var cats = [];
+
+    for (const box of boxes) {
+        if (count == 30) {
+            break;
+        }
+        var cat = await box.$eval(innerSelector, node => node.innerText);
+        console.log(count, ": ", cat)
+        cats.push(cat);
+        count++;
+    }
+
+    return cats;
 
 
 
 
 }
-
-
-
 // TO-DO create function to find highest value for longevity, sillage etc... remember might have 0 votes
 async function highestNum(indent: string, page, selectorwait: string, selector: string) {
     await page.waitForSelector(selectorwait)
@@ -136,7 +163,7 @@ async function highestNum(indent: string, page, selectorwait: string, selector: 
 //maybe save link?
 //use database?
 
-async function addToDB(name: string, brand: string, gender: number, accords, top, middle, base) {
+async function addToDB(name: string, brand: string, gender: number, accords, top, middle, base, pros, cons, summary, desc, neg, pos) {
 
     const newPerfume = new Perfume({
         NAME: name,
@@ -149,7 +176,13 @@ async function addToDB(name: string, brand: string, gender: number, accords, top
         ACCORDS: accords,
         TOP_NOTES: top,
         MIDDLE_NOTES: middle,
-        BASE_NOTES: base
+        BASE_NOTES: base,
+        PROS: pros,
+        CONS: cons,
+        SUMMARY: summary,
+        DESC: desc,
+        POPULAR_REVIEWS: pos,
+        NEGATIVE_REVIEWS: neg,
     });
 
     await newPerfume.save().then(savedDoc => {

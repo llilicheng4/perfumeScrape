@@ -19,12 +19,3 @@ const newPerfume = new Perfume({
     Brand: "Maison Francis Kurkdjian",
     // Fill in the rest of the data
 });
-
-// Save the new perfume document
-newPerfume.save((err: any) => {
-    if (err) {
-        console.error(err);
-    } else {
-        console.log('Perfume document saved successfully.');
-    }
-});

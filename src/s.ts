@@ -45,7 +45,7 @@ puppeteer.use(StealthPlugin()).use(Adblocker({ blockTrackers: true })).launch({ 
       });
 
       //look for table
-      const selector = '.cell.card.fr-news-box'; // Replace with the actual class name
+      const selector = '.cell.card.fr-news-box';
       await page.waitForSelector(selector).then(async () => { console.log("found table"); });
       var elements = await page.$$(selector);
 

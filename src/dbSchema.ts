@@ -17,6 +17,8 @@ interface IPerfume extends Document {
     CONS: string[];
     SUMMARY: string;
     DESC: string;
+    POPULAR_REVIEWS: string[];
+    NEGATIVE_REVIEWS: string[];
 }
 
 // Create a schema for the perfume data
@@ -36,6 +38,8 @@ const PerfumeSchema = new Schema<IPerfume>({
     CONS: [String],
     SUMMARY: String,
     DESC: String,
+    POPULAR_REVIEWS: [String],
+    NEGATIVE_REVIEWS: [String],
 });
 
 PerfumeSchema.index({ NAME: 1, BRAND: 1 }, { unique: true });

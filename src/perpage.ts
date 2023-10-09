@@ -3,7 +3,7 @@ import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import Adblocker from 'puppeteer-extra-plugin-adblocker';
 import fs from 'fs';
 import csvParser from 'csv-parser';
-import { TimeoutError } from "puppeteer-core";
+import { Page, TimeoutError } from "puppeteer-core";
 import mongoose from 'mongoose';
 import 'dotenv/config';
 import { Perfume } from './dbSchema';
@@ -93,7 +93,6 @@ async function readFromPage(page, details) {
     // const dets = await readParagraph("details", page, detailHTML, detailHTML);
     // console.log(dets);
     await page.click('#popular-positive-reviews-label');
-
     const positiveReviews = await ReadReviews("positive", page, '#popular-positive-reviews > div > div.grid-x.grid-padding-x.grid-margin-y', '#popular-positive-reviews > div > div.grid-x.grid-padding-x.grid-margin-y > div', 'div > div.flex-child-auto > div > p');
     await page.click('#popular-negative-reviews-label');
     const negativeReviews = await ReadReviews("negative", page, '#popular-negative-reviews > div > div.grid-x.grid-padding-x.grid-margin-y', '#popular-negative-reviews > div > div.grid-x.grid-padding-x.grid-margin-y > div', 'div > div.flex-child-auto > div > p');
@@ -103,23 +102,27 @@ async function readFromPage(page, details) {
 
 }
 
-async function ReadReviews(indent: string, page, selectorWait: string, selector: string, innerSelector) {
+async function ReadReviews(indent: string, page: Page, selectorWait: string, selector: string, innerSelector: string) {
     await page.waitForSelector(selectorWait)
         .then(() => console.log("found: ", indent))
 
-
-    const boxes = await page.$$(selector);
-    var count = 0;
     var cats = [];
+    for (let i = 0; i < 30; i++) {
+        try {
 
-    for (const box of boxes) {
-        if (count == 30) {
+            const box = await page.$(`${selector}:nth-child(${i})`);
+            await box.scrollIntoView();
+            await new Promise(r => setTimeout(r, 3000));
+            var cat = await box.$eval(innerSelector, node => node.innerText);
+            if (cat.length > 0) {
+                cats.push(cat);
+                console.log(cat);
+            }
+        }
+        catch (e) {
+            console.log(e)
             break;
         }
-        var cat = await box.$eval(innerSelector, node => node.innerText);
-        console.log(count, ": ", cat)
-        cats.push(cat);
-        count++;
     }
 
     return cats;

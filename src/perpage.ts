@@ -7,6 +7,9 @@ import { Page, TimeoutError } from "puppeteer-core";
 import mongoose from 'mongoose';
 import 'dotenv/config';
 import { Perfume } from './dbSchema';
+// import UserAgent from 'user-agents';
+const UserAgent = require('user-agents');
+
 
 
 
@@ -30,9 +33,14 @@ puppeteer.use(StealthPlugin()).use(Adblocker({ blockTrackers: true })).launch({ 
     for (let i = 1; i < 11; i++) {
         for (let j = 1; j < 4; j++) {
             const rows = await readfromcsv(`dataP${i}-G${j}.csv`);
-            const page = await browser.newPage();
 
             for (const row of rows) {
+                var userAgent = new UserAgent();
+
+                const page = await browser.newPage();
+
+                await page.setUserAgent(userAgent.toString());
+
                 console.log(row);
 
                 await page.goto(row.Link, { timeout: 0 });
@@ -40,6 +48,8 @@ puppeteer.use(StealthPlugin()).use(Adblocker({ blockTrackers: true })).launch({ 
                 await new Promise(r => setTimeout(r, 5000));
 
                 await readFromPage(page, row);
+
+
             }
 
 
@@ -80,88 +90,119 @@ async function readFromPage(page, details) {
     console.log(accordBars);
 
 
-    // const TopNotesExtract = await readToArray('top', page, '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(4) > div > div:nth-child(1)', '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(4) > div > div');
-    // const MiddleNoteExtract = await readToArray('middle', page, '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(6) > div > div:nth-child(1) > div:nth-child(2)', '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(6) > div > div');
-    // const BaseNotesExtract = await readToArray('base', page, '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(8) > div > div:nth-child(1)', '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(8) > div > div');
+    const TopNotesExtract = await readToArray('top', page, '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(4) > div > div:nth-child(1)', '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(4) > div > div');
+    const MiddleNoteExtract = await readToArray('middle', page, '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(6) > div > div:nth-child(1) > div:nth-child(2)', '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(6) > div > div');
+    const BaseNotesExtract = await readToArray('base', page, '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(8) > div > div:nth-child(1)', '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(8) > div > div');
 
-    // const pros = await readToArray("pros", page, '#main-content > div.grid-x.grid-margin-x > div.small-12.medium-12.large-9.cell > div > div:nth-child(5) > div > div:nth-child(1) > div:nth-child(2)', '#main-content > div.grid-x.grid-margin-x > div.small-12.medium-12.large-9.cell > div > div:nth-child(5) > div > div:nth-child(1) > div > span');
-    // const cons = await readToArray("cons", page, '#main-content > div.grid-x.grid-margin-x > div.small-12.medium-12.large-9.cell > div > div:nth-child(5) > div > div:nth-child(2) > div:nth-child(2)', '#main-content > div.grid-x.grid-margin-x > div.small-12.medium-12.large-9.cell > div > div:nth-child(5) > div > div:nth-child(2) > div > span');
+    const pros = await readToArray("pros", page, '#main-content > div.grid-x.grid-margin-x > div.small-12.medium-12.large-9.cell > div > div:nth-child(5) > div > div:nth-child(1) > div:nth-child(2)', '#main-content > div.grid-x.grid-margin-x > div.small-12.medium-12.large-9.cell > div > div:nth-child(5) > div > div:nth-child(1) > div > span');
+    const cons = await readToArray("cons", page, '#main-content > div.grid-x.grid-margin-x > div.small-12.medium-12.large-9.cell > div > div:nth-child(5) > div > div:nth-child(2) > div:nth-child(2)', '#main-content > div.grid-x.grid-margin-x > div.small-12.medium-12.large-9.cell > div > div:nth-child(5) > div > div:nth-child(2) > div > span');
 
-    // const summaryHTML = "#main-content > div.grid-x.grid-margin-x > div.small-12.medium-12.large-9.cell > div > div:nth-child(2) > div:nth-child(5) > div > p:nth-child(1)";
-    // const summary = await readParagraph("summary", page, summaryHTML, summaryHTML);
-    // const detailHTML = "#main-content > div.grid-x.grid-margin-x > div.small-12.medium-12.large-9.cell > div > div:nth-child(2) > div:nth-child(5) > div > div";
-    // const dets = await readParagraph("details", page, detailHTML, detailHTML);
-    // console.log(dets);
-    await page.click('#popular-positive-reviews-label');
-    const positiveReviews = await ReadReviews("positive", page, '#popular-positive-reviews > div > div.grid-x.grid-padding-x.grid-margin-y', '#popular-positive-reviews > div > div.grid-x.grid-padding-x.grid-margin-y > div', 'div > div.flex-child-auto > div > p');
+    const summaryHTML = "#main-content > div.grid-x.grid-margin-x > div.small-12.medium-12.large-9.cell > div > div:nth-child(2) > div:nth-child(5) > div > p:nth-child(1)";
+    const summary = await readParagraph("summary", page, summaryHTML, summaryHTML);
+
+    const detailHTML = "div.fragrantica-blockquote";
+    const dets = await readParagraph("details", page, detailHTML, detailHTML);
+
+    const reviewHTML = ".cell.fragrance-review-box";
+    const positiveSelector = "#popular-positive-reviews";
+    const negativeSelector = "#popular-negative-reviews";
+    const innerSelector = 'div > div > div.flex-child-auto > div > p';
+    await (await page.$('#popular-positive-reviews-label')).scrollIntoView();
+    await new Promise(r => setTimeout(r, 2000));
+    page.click('#popular-positive-reviews-label');
+    const positiveReviews = await ReadReviews("positive", page, positiveSelector, reviewHTML, innerSelector);
+
+    await (await page.$('#popular-negative-reviews-label')).scrollIntoView();
+    await new Promise(r => setTimeout(r, 2000));
     await page.click('#popular-negative-reviews-label');
-    const negativeReviews = await ReadReviews("negative", page, '#popular-negative-reviews > div > div.grid-x.grid-padding-x.grid-margin-y', '#popular-negative-reviews > div > div.grid-x.grid-padding-x.grid-margin-y > div', 'div > div.flex-child-auto > div > p');
+    const negativeReviews = await ReadReviews("negative", page, negativeSelector, reviewHTML, innerSelector);
 
-    // await addToDB(details.Name, details.Brand, genderNum, accordBars, TopNotesExtract, MiddleNoteExtract, BaseNotesExtract, pros, cons, summary, dets, negativeReviews, positiveReviews);
+    await addToDB(details.Name, details.Brand, genderNum, accordBars, TopNotesExtract, MiddleNoteExtract, BaseNotesExtract, pros, cons, summary, dets, negativeReviews, positiveReviews);
 
 
 }
-
 async function ReadReviews(indent: string, page: Page, selectorWait: string, selector: string, innerSelector: string) {
+    var cat = [];
     await page.waitForSelector(selectorWait)
-        .then(() => console.log("found: ", indent))
+        .then(() => console.log("found: ", indent));
 
-    var cats = [];
-    for (let i = 0; i < 30; i++) {
-        try {
+    const outerDiv = await page.$(selectorWait);
+    const divList = await outerDiv.$$(selector);
 
-            const box = await page.$(`${selector}:nth-child(${i})`);
-            await box.scrollIntoView();
-            await new Promise(r => setTimeout(r, 3000));
-            var cat = await box.$eval(innerSelector, node => node.innerText);
-            if (cat.length > 0) {
-                cats.push(cat);
-                console.log(cat);
-            }
-        }
-        catch (e) {
-            console.log(e)
-            break;
-        }
+    for (let i = 0; i < divList.length; i++) {
+        divList[i].scrollIntoView();
+        const text = await divList[i].$eval(innerSelector, node => node.textContent);
+        cat.push(text);
+        await new Promise(r => setTimeout(r, 2000));
+
+        console.log("found: ", i);
     }
 
-    return cats;
-
-
-
+    return cat;
 
 }
+// async function ReadReviews(indent: string, page: Page, selectorWait: string, selector: string, innerSelector: string) {
+//     await page.waitForSelector(selectorWait)
+//         .then(() => console.log("found: ", indent));
+//     var cats = [];
+//     await (await page.$(`${selector}:nth-child(${1}`)).scrollIntoView();
+//     await new Promise(r => setTimeout(r, 2000));
+//     await (await page.$(`${selector}:nth-child(${3}`)).scrollIntoView();
+//     await new Promise(r => setTimeout(r, 2000));
+//     await (await page.$(`${selector}:nth-child(${5}`)).scrollIntoView();
+//     for (let i = 1; i < 31; i++) {
+//         try {
+
+//             // await page.waitForSelector(`${selector}:nth-child(${i + 1})`);
+//             await (await page.$(`${selector}:nth-child(${i}) > ${innerSelector}`)).scrollIntoView();
+//             await new Promise(r => setTimeout(r, 2000));
+//             const box = await page.$eval(`${selector}:nth-child(${i}) > ${innerSelector}`, node => node.textContent);
+//             cats.push(box);
+//             console.log(box);
+//         }
+//         catch (e) {
+//             console.log(e)
+//             break;
+//         }
+//     }
+
+//     return cats;
+
+
+
+
+// }
 // TO-DO create function to find highest value for longevity, sillage etc... remember might have 0 votes
-async function highestNum(indent: string, page, selectorwait: string, selector: string) {
-    await page.waitForSelector(selectorwait)
-        .then(() => console.log("found: ", indent))
+// async function highestNum(indent: string, page, selectorwait: string, selector: string) {
+// await page.waitForSelector(selectorwait)
+//     .then(() => console.log("found: ", indent))
 
 
-    const boxes = await page.$$(selector);
-    for (const box of boxes) {
-        var categories = [];
-        var nums = [];
+// const boxes = await page.$$(selector);
+// for (const box of boxes) {
+//     var categories = [];
+//     var nums = [];
 
-        var cat = await box.$$eval('div > div:nth-child(3) > div > div.cell.small-5.medium-5.large-5 > span', node => node.innerText);
-        categories.push(cat);
-        var num = await box.$$eval('div > div:nth-child(3) > div > div.cell.small-1.medium-1.large-1', node => node.innerText);
-        nums.push(num);
-        for (var i = 1; i <= nums.length; i++) {
-            try {
-                var category: string = categories[i - 1];
-                var num = nums[i - 1];
-                console.log({ category: category, nums: num });
-            } catch {
-                console.log("no bar")
-            }
-
-
-
-        }
-    }
+//     var cat = await box.$$eval('div > div:nth-child(3) > div > div.cell.small-5.medium-5.large-5 > span', node => node.innerText);
+//     categories.push(cat);
+//     var num = await box.$$eval('div > div:nth-child(3) > div > div.cell.small-1.medium-1.large-1', node => node.innerText);
+//     nums.push(num);
+//     for (var i = 1; i <= nums.length; i++) {
+//         try {
+//             var category: string = categories[i - 1];
+//             var num = nums[i - 1];
+//             console.log({ category: category, nums: num });
+//         } catch {
+//             console.log("no bar")
+//         }
 
 
-}
+
+//     }
+// }
+
+
+// }
 //TO-DO create function to get people who likes also like
 //maybe save link?
 //use database?
@@ -187,15 +228,18 @@ async function addToDB(name: string, brand: string, gender: number, accords, top
         POPULAR_REVIEWS: pos,
         NEGATIVE_REVIEWS: neg,
     });
+    try {
+        await newPerfume.save().then(savedDoc => {
 
-    await newPerfume.save().then(savedDoc => {
-
-        if (savedDoc === newPerfume) {
-            console.log("saved");
-        } else {
-            console.log("not saved");
-        }
-    });
+            if (savedDoc === newPerfume) {
+                console.log("saved");
+            } else {
+                console.log("not saved");
+            }
+        });
+    } catch (e) {
+        console.log("error, repeated in DB")
+    }
 }
 
 async function readToArray(ident: string, page, selectorwait: string, selector: string) {
@@ -249,10 +293,20 @@ async function readfromcsv(file) {
 }
 
 async function readParagraph(identifier: string, page, selector, selectorwait) {
-    await page.waitForSelector(selectorwait).then(() => console.log('Paragraph found', identifier));
-    const pDiv = await page.$eval(selector, node => node.innerText);
+    var pDiv;
+    for (let i = 0; i < 4; i++) {
+        try {
+            await page.waitForSelector(selectorwait, { timeout: 7 }).then(() => console.log('Paragraph found', identifier));
+            pDiv = await page.$eval(selector, node => node.textContent);
+            return pDiv;
+        }
+        catch (e) {
+            console.log('Paragraph not found', identifier);
+        }
+    }
+    return pDiv = null;
     // console.log(pDiv);
 
-    return pDiv;
+
 }
 

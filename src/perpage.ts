@@ -9,6 +9,7 @@ import 'dotenv/config';
 import { Perfume } from './dbSchema';
 // import UserAgent from 'user-agents';
 const UserAgent = require('user-agents');
+const MAX_TRY = 3;
 
 
 
@@ -121,91 +122,39 @@ async function readFromPage(page, details) {
 
 
 }
+
+//added try catch , need to remake this to ensure it reads reviews
 async function ReadReviews(indent: string, page: Page, selectorWait: string, selector: string, innerSelector: string) {
-    var cat = [];
-    await page.waitForSelector(selectorWait)
-        .then(() => console.log("found: ", indent));
 
-    const outerDiv = await page.$(selectorWait);
-    const divList = await outerDiv.$$(selector);
+    var tryCount = 0;
+    while (tryCount < MAX_TRY) {
 
-    for (let i = 0; i < divList.length; i++) {
-        divList[i].scrollIntoView();
-        const text = await divList[i].$eval(innerSelector, node => node.textContent);
-        cat.push(text);
-        await new Promise(r => setTimeout(r, 2000));
+        try {
+            var cat = [];
+            await page.waitForSelector(selectorWait)
+                .then(() => console.log("found: ", indent));
 
-        console.log("found: ", i);
+            const outerDiv = await page.$(selectorWait);
+            const divList = await outerDiv.$$(selector);
+            await new Promise(r => setTimeout(r, 2000));
+
+            for (let i = 0; i < divList.length; i++) {
+                divList[i].scrollIntoView();
+                const text = await divList[i].$eval(innerSelector, node => node.textContent);
+                cat.push(text);
+                await new Promise(r => setTimeout(r, 2000));
+
+                console.log("found: ", i);
+            }
+
+            return cat;
+        } catch (e) {
+            console.log("error: ", e);
+            tryCount++;
+        }
     }
 
-    return cat;
-
 }
-// async function ReadReviews(indent: string, page: Page, selectorWait: string, selector: string, innerSelector: string) {
-//     await page.waitForSelector(selectorWait)
-//         .then(() => console.log("found: ", indent));
-//     var cats = [];
-//     await (await page.$(`${selector}:nth-child(${1}`)).scrollIntoView();
-//     await new Promise(r => setTimeout(r, 2000));
-//     await (await page.$(`${selector}:nth-child(${3}`)).scrollIntoView();
-//     await new Promise(r => setTimeout(r, 2000));
-//     await (await page.$(`${selector}:nth-child(${5}`)).scrollIntoView();
-//     for (let i = 1; i < 31; i++) {
-//         try {
-
-//             // await page.waitForSelector(`${selector}:nth-child(${i + 1})`);
-//             await (await page.$(`${selector}:nth-child(${i}) > ${innerSelector}`)).scrollIntoView();
-//             await new Promise(r => setTimeout(r, 2000));
-//             const box = await page.$eval(`${selector}:nth-child(${i}) > ${innerSelector}`, node => node.textContent);
-//             cats.push(box);
-//             console.log(box);
-//         }
-//         catch (e) {
-//             console.log(e)
-//             break;
-//         }
-//     }
-
-//     return cats;
-
-
-
-
-// }
-// TO-DO create function to find highest value for longevity, sillage etc... remember might have 0 votes
-// async function highestNum(indent: string, page, selectorwait: string, selector: string) {
-// await page.waitForSelector(selectorwait)
-//     .then(() => console.log("found: ", indent))
-
-
-// const boxes = await page.$$(selector);
-// for (const box of boxes) {
-//     var categories = [];
-//     var nums = [];
-
-//     var cat = await box.$$eval('div > div:nth-child(3) > div > div.cell.small-5.medium-5.large-5 > span', node => node.innerText);
-//     categories.push(cat);
-//     var num = await box.$$eval('div > div:nth-child(3) > div > div.cell.small-1.medium-1.large-1', node => node.innerText);
-//     nums.push(num);
-//     for (var i = 1; i <= nums.length; i++) {
-//         try {
-//             var category: string = categories[i - 1];
-//             var num = nums[i - 1];
-//             console.log({ category: category, nums: num });
-//         } catch {
-//             console.log("no bar")
-//         }
-
-
-
-//     }
-// }
-
-
-// }
-//TO-DO create function to get people who likes also like
-//maybe save link?
-//use database?
 
 async function addToDB(name: string, brand: string, gender: number, accords, top, middle, base, pros, cons, summary, desc, neg, pos) {
 
@@ -242,21 +191,31 @@ async function addToDB(name: string, brand: string, gender: number, accords, top
     }
 }
 
+//added try catch
 async function readToArray(ident: string, page, selectorwait: string, selector: string) {
-    await page.waitForSelector(selectorwait).then(() => console.log("found:", ident));
+    var tryCount = 0;
+    while (tryCount < MAX_TRY) {
+        try {
+            await page.waitForSelector(selectorwait).then(() => console.log("found:", ident));
 
-    const NoteDivs = await page.$$(selector);
-    var middleNotes = []
-    // Extract and print the fruit names
-    console.log(NoteDivs.length);
-    for (const fruitDiv of NoteDivs) {
-        const fruitName = await fruitDiv.evaluate(node => node.textContent.trim());
-        middleNotes.push(fruitName);
+            const NoteDivs = await page.$$(selector);
+            var middleNotes = []
+            // Extract and print the fruit names
+            console.log(NoteDivs.length);
+            for (const fruitDiv of NoteDivs) {
+                const fruitName = await fruitDiv.evaluate(node => node.textContent.trim());
+                middleNotes.push(fruitName);
+            }
+
+            console.log(middleNotes);
+
+            return middleNotes;
+        } catch (e) {
+            console.log("message: ", e);
+            tryCount++;
+        }
     }
 
-    console.log(middleNotes);
-
-    return middleNotes;
 }
 
 async function readfromcsv(file) {

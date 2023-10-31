@@ -7,8 +7,7 @@ import { Page, TimeoutError } from "puppeteer-core";
 import mongoose from 'mongoose';
 import 'dotenv/config';
 import { Perfume } from './dbSchema';
-// import UserAgent from 'user-agents';
-const UserAgent = require('user-agents');
+
 const MAX_TRY = 3;
 
 
@@ -36,11 +35,7 @@ puppeteer.use(StealthPlugin()).use(Adblocker({ blockTrackers: true })).launch({ 
             const rows = await readfromcsv(`dataP${i}-G${j}.csv`);
 
             for (const row of rows) {
-                var userAgent = new UserAgent();
-
                 const page = await browser.newPage();
-
-                await page.setUserAgent(userAgent.toString());
 
                 console.log(row);
 
@@ -108,23 +103,33 @@ async function readFromPage(page, details) {
     const positiveSelector = "#popular-positive-reviews";
     const negativeSelector = "#popular-negative-reviews";
     const innerSelector = 'div > div > div.flex-child-auto > div > p';
+    const scrollTo = "#main-content > div.callout.text-center"
+
     await (await page.$('#popular-positive-reviews-label')).scrollIntoView();
     await new Promise(r => setTimeout(r, 2000));
-    page.click('#popular-positive-reviews-label');
+    await page.click('#popular-positive-reviews-label');
+    await (await page.$(scrollTo)).scrollIntoView();
+    await new Promise(r => setTimeout(r, 5000));
+
     const positiveReviews = await ReadReviews("positive", page, positiveSelector, reviewHTML, innerSelector);
 
     await (await page.$('#popular-negative-reviews-label')).scrollIntoView();
+
     await new Promise(r => setTimeout(r, 2000));
     await page.click('#popular-negative-reviews-label');
+    await (await page.$(scrollTo)).scrollIntoView();
+    await new Promise(r => setTimeout(r, 5000));
+
     const negativeReviews = await ReadReviews("negative", page, negativeSelector, reviewHTML, innerSelector);
 
     await addToDB(details.Name, details.Brand, genderNum, accordBars, TopNotesExtract, MiddleNoteExtract, BaseNotesExtract, pros, cons, summary, dets, negativeReviews, positiveReviews);
 
-
+    await new Promise(r => setTimeout(r, 10000));
 }
 
 //added try catch , need to remake this to ensure it reads reviews
 async function ReadReviews(indent: string, page: Page, selectorWait: string, selector: string, innerSelector: string) {
+    await new Promise(r => setTimeout(r, 2000));
 
     var tryCount = 0;
     while (tryCount < MAX_TRY) {
@@ -139,11 +144,14 @@ async function ReadReviews(indent: string, page: Page, selectorWait: string, sel
             await new Promise(r => setTimeout(r, 2000));
 
             for (let i = 0; i < divList.length; i++) {
-                divList[i].scrollIntoView();
+                await divList[i].scrollIntoView();
+                await new Promise(r => setTimeout(r, 2000));
                 const text = await divList[i].$eval(innerSelector, node => node.textContent);
                 cat.push(text);
                 await new Promise(r => setTimeout(r, 2000));
-
+                if (i == 14) {
+                    break;
+                }
                 console.log("found: ", i);
             }
 
@@ -153,6 +161,8 @@ async function ReadReviews(indent: string, page: Page, selectorWait: string, sel
             tryCount++;
         }
     }
+
+    return null;
 
 }
 
@@ -206,6 +216,7 @@ async function readToArray(ident: string, page, selectorwait: string, selector: 
                 const fruitName = await fruitDiv.evaluate(node => node.textContent.trim());
                 middleNotes.push(fruitName);
             }
+            await new Promise(r => setTimeout(r, 2000));
 
             console.log(middleNotes);
 
@@ -215,6 +226,8 @@ async function readToArray(ident: string, page, selectorwait: string, selector: 
             tryCount++;
         }
     }
+
+    return null;
 
 }
 
@@ -251,21 +264,23 @@ async function readfromcsv(file) {
     });
 }
 
+//added try catch
 async function readParagraph(identifier: string, page, selector, selectorwait) {
+    var tryCount = 0;
     var pDiv;
-    for (let i = 0; i < 4; i++) {
+    while (tryCount < MAX_TRY) {
         try {
             await page.waitForSelector(selectorwait, { timeout: 7 }).then(() => console.log('Paragraph found', identifier));
             pDiv = await page.$eval(selector, node => node.textContent);
             return pDiv;
         }
         catch (e) {
+            console.log('error', e);
             console.log('Paragraph not found', identifier);
+            tryCount++;
         }
     }
-    return pDiv = null;
-    // console.log(pDiv);
-
+    return null;
 
 }
 

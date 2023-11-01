@@ -10,7 +10,11 @@ import { Perfume } from './dbSchema';
 
 const MAX_TRY = 3;
 
+async function randomWait() {
 
+    const time = Math.random() * (10 - 2) + 2;
+    await new Promise(r => setTimeout(r, time * 1000));
+}
 
 
 async function connectDB() {
@@ -30,13 +34,13 @@ async function connectDB() {
 
 puppeteer.use(StealthPlugin()).use(Adblocker({ blockTrackers: true })).launch({ executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe", headless: false }).then(async browser => {
     await connectDB();
+
     for (let i = 1; i < 11; i++) {
         for (let j = 1; j < 4; j++) {
             const rows = await readfromcsv(`dataP${i}-G${j}.csv`);
+            const page = await browser.newPage();
 
             for (const row of rows) {
-                const page = await browser.newPage();
-
                 console.log(row);
 
                 await page.goto(row.Link, { timeout: 0 });
@@ -56,6 +60,7 @@ puppeteer.use(StealthPlugin()).use(Adblocker({ blockTrackers: true })).launch({ 
 });
 
 async function readFromPage(page, details) {
+    await randomWait();
     await page.waitForXPath('//*[@id="toptop"]/h1');
 
     var gender = await page.$eval('#toptop > h1 > small', node => node.innerText);
@@ -89,13 +94,13 @@ async function readFromPage(page, details) {
     const TopNotesExtract = await readToArray('top', page, '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(4) > div > div:nth-child(1)', '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(4) > div > div');
     const MiddleNoteExtract = await readToArray('middle', page, '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(6) > div > div:nth-child(1) > div:nth-child(2)', '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(6) > div > div');
     const BaseNotesExtract = await readToArray('base', page, '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(8) > div > div:nth-child(1)', '#pyramid > div:nth-child(1) > div > div:nth-child(2) > div:nth-child(8) > div > div');
-
+    await randomWait();
     const pros = await readToArray("pros", page, '#main-content > div.grid-x.grid-margin-x > div.small-12.medium-12.large-9.cell > div > div:nth-child(5) > div > div:nth-child(1) > div:nth-child(2)', '#main-content > div.grid-x.grid-margin-x > div.small-12.medium-12.large-9.cell > div > div:nth-child(5) > div > div:nth-child(1) > div > span');
     const cons = await readToArray("cons", page, '#main-content > div.grid-x.grid-margin-x > div.small-12.medium-12.large-9.cell > div > div:nth-child(5) > div > div:nth-child(2) > div:nth-child(2)', '#main-content > div.grid-x.grid-margin-x > div.small-12.medium-12.large-9.cell > div > div:nth-child(5) > div > div:nth-child(2) > div > span');
-
+    await randomWait();
     const summaryHTML = "#main-content > div.grid-x.grid-margin-x > div.small-12.medium-12.large-9.cell > div > div:nth-child(2) > div:nth-child(5) > div > p:nth-child(1)";
     const summary = await readParagraph("summary", page, summaryHTML, summaryHTML);
-
+    await randomWait();
     const detailHTML = "div.fragrantica-blockquote";
     const dets = await readParagraph("details", page, detailHTML, detailHTML);
 
@@ -104,7 +109,7 @@ async function readFromPage(page, details) {
     const negativeSelector = "#popular-negative-reviews";
     const innerSelector = 'div > div > div.flex-child-auto > div > p';
     const scrollTo = "#main-content > div.callout.text-center"
-
+    await randomWait();
     await (await page.$('#popular-positive-reviews-label')).scrollIntoView();
     await new Promise(r => setTimeout(r, 2000));
     await page.click('#popular-positive-reviews-label');
@@ -118,6 +123,7 @@ async function readFromPage(page, details) {
     await new Promise(r => setTimeout(r, 2000));
     await page.click('#popular-negative-reviews-label');
     await (await page.$(scrollTo)).scrollIntoView();
+    await randomWait();
     await new Promise(r => setTimeout(r, 5000));
 
     const negativeReviews = await ReadReviews("negative", page, negativeSelector, reviewHTML, innerSelector);
@@ -125,6 +131,10 @@ async function readFromPage(page, details) {
     await addToDB(details.Name, details.Brand, genderNum, accordBars, TopNotesExtract, MiddleNoteExtract, BaseNotesExtract, pros, cons, summary, dets, negativeReviews, positiveReviews);
 
     await new Promise(r => setTimeout(r, 10000));
+
+    let dateTime = new Date()
+
+    console.log(dateTime);
 }
 
 //added try catch , need to remake this to ensure it reads reviews

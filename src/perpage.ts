@@ -12,7 +12,7 @@ const MAX_TRY = 3;
 
 async function randomWait() {
 
-    const time = Math.random() * (10 - 2) + 2;
+    const time = Math.random() * (7 - 2) + 2;
     await new Promise(r => setTimeout(r, time * 1000));
 }
 
@@ -40,14 +40,14 @@ puppeteer.use(StealthPlugin()).use(Adblocker({ blockTrackers: true })).launch({ 
             const rows = await readfromcsv(`dataP${i}-G${j}.csv`);
             const page = await browser.newPage();
 
-            for (const row of rows) {
-                console.log(row);
+            for (let k = 43; k < rows.length; k++) {
+                console.log(rows[k]);
 
-                await page.goto(row.Link, { timeout: 0 });
+                await page.goto(rows[k].Link, { timeout: 0 });
 
                 await new Promise(r => setTimeout(r, 5000));
 
-                await readFromPage(page, row);
+                await readFromPage(page, rows[k]);
 
 
             }
@@ -146,7 +146,7 @@ async function ReadReviews(indent: string, page: Page, selectorWait: string, sel
 
         try {
             var cat = [];
-            await page.waitForSelector(selectorWait)
+            await page.waitForSelector(selectorWait, { timeout: 5000 })
                 .then(() => console.log("found: ", indent));
 
             const outerDiv = await page.$(selectorWait);
@@ -216,7 +216,7 @@ async function readToArray(ident: string, page, selectorwait: string, selector: 
     var tryCount = 0;
     while (tryCount < MAX_TRY) {
         try {
-            await page.waitForSelector(selectorwait).then(() => console.log("found:", ident));
+            await page.waitForSelector(selectorwait, { timeout: 5000 }).then(() => console.log("found:", ident));
 
             const NoteDivs = await page.$$(selector);
             var middleNotes = []
@@ -280,7 +280,7 @@ async function readParagraph(identifier: string, page, selector, selectorwait) {
     var pDiv;
     while (tryCount < MAX_TRY) {
         try {
-            await page.waitForSelector(selectorwait, { timeout: 7 }).then(() => console.log('Paragraph found', identifier));
+            await page.waitForSelector(selectorwait, { timeout: 5000 }).then(() => console.log('Paragraph found', identifier));
             pDiv = await page.$eval(selector, node => node.textContent);
             return pDiv;
         }

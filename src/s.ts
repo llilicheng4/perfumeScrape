@@ -22,13 +22,13 @@ puppeteer.use(StealthPlugin()).use(Adblocker({ blockTrackers: true })).launch({ 
 
   await page.click("#offCanvasLeftOverlap1 > div > div > div:nth-child(12) > div.ais-Panel > div > p > div > button");
 
-  for (var i = 3; i < 4; i++) {
+  for (var i = 1; i < 4; i++) {
 
     await page.click(`#offCanvasLeftOverlap1 > div > div > div:nth-child(12) > div.ais-Panel > div > p > div > ul > li:nth-child(${i})`);
     console.log("new parent")
     await new Promise(r => setTimeout(r, 6000));
 
-    for (var j = 3; j < 4; j++) {
+    for (var j = 1; j < 4; j++) {
       await page.click(`#offCanvasLeftOverlap1 > div > div > div:nth-child(3) > div.ais-Panel-body > p > div > ul > li:nth-child(${j})`);
       console.log("gen change");
       await new Promise(r => setTimeout(r, 6000));

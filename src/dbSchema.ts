@@ -8,6 +8,7 @@ interface IPerfume extends Document {
     // LONGEVITY: Record<string, number>;
     // SILLAGE: Record<string, number>;
     // "Price/Value": Record<string, number>;
+    IMAGE: string;
     GENDER: number;
     ACCORDS: { Type: string; Strength: number }[];
     TOP_NOTES: string[];
@@ -25,10 +26,7 @@ interface IPerfume extends Document {
 const PerfumeSchema = new Schema<IPerfume>({
     NAME: String,
     BRAND: String,
-    // LAUNCHDATE: Number,
-    // LONGEVITY: Object,
-    // SILLAGE: Object,
-    // "Price/Value": Object,
+    IMAGE: String,
     GENDER: Number,
     ACCORDS: [{ Type: String, Strength: Number }],
     TOP_NOTES: [String],
@@ -40,7 +38,7 @@ const PerfumeSchema = new Schema<IPerfume>({
     DESC: String,
     POPULAR_REVIEWS: [String],
     NEGATIVE_REVIEWS: [String],
-});
+}, { timestamps: true });
 
 PerfumeSchema.index({ NAME: 1, BRAND: 1 }, { unique: true });
 // Create and export the model
